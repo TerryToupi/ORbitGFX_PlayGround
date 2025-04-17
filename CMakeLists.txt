@@ -32,3 +32,6 @@ target_link_libraries(GfxText
     PRIVATE
     gfx::ORbit
 )
+
+# POST BUILD
+copy_renderer_dlls(GfxText)
