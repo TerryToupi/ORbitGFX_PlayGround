@@ -104,11 +104,9 @@ int main()
         .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST,
         .width = 1920,
         .height = 1080,
-        .views = {
-            {
-                .format = gfx::TextureFormat::BGRA8_UNORM,
-                .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST
-            }
+        .view = {
+			.format = gfx::TextureFormat::BGRA8_UNORM,
+			.usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST
         },
         .uploadDesc = {
             .upload = true,
