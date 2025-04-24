@@ -19,6 +19,7 @@ utils::Handle<gfx::Buffer> normalBuffer;
 utils::Handle<gfx::Texture> mainTexture;
 utils::Handle<gfx::Sampler> mainSampler;
 utils::Handle<gfx::FrameBuffer> mainFrame;
+utils::Handle<gfx::Texture> frameTexture;
 utils::Handle<gfx::BindGroup> bindGroup;
 utils::Handle<gfx::BindGroupLayout> bindGroupLayout;
 gfx::TextureFormat surfaceFormat;

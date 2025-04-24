@@ -32,21 +32,17 @@ std::vector<uint8_t> generateCheckerboard(int width, int height, int tileSize) {
 
 void running()
 {
+    gfx::CommandBuffer* commandBuffer = gfx::Renderer::instance->BeginCommandRecording(gfx::CommandBufferType::OFFSCREEN);
     {
-        gfx::CommandBuffer* commandBuffer = gfx::Renderer::instance->BeginCommandRecording();
-        gfx::RenderPassRenderer* passRenderer = commandBuffer->BeginSurfacePass(renderPass);
-
-        gfx::DrawStream stream;
-
-        stream.Insert({
+        std::vector<gfx::Draw> stream;
+        stream.push_back({
             .shader = shader2,
             .bindGroups = { bindGroup },
             .indexBuffer = indexBuffer,
             .vertexBuffers = { vertexBuffer1, uvBuffer },
             .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
             });
-
-        stream.Insert({
+        stream.push_back({
             .shader = shader2,
             .bindGroups = { bindGroup },
             .indexBuffer = indexBuffer,
@@ -54,11 +50,28 @@ void running()
             .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
             });
 
-        passRenderer->DrawPass(stream);
-
-        commandBuffer->EndCommandRecording(passRenderer);
-        commandBuffer->Submit();
+        commandBuffer->BeginRenderPass(renderPass, stream);
     }
+    {
+        std::vector<gfx::Draw> stream;
+        stream.push_back({
+            .shader = shader2,
+            .bindGroups = { bindGroup },
+            .indexBuffer = indexBuffer,
+            .vertexBuffers = { vertexBuffer1, uvBuffer },
+            .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
+            });
+        stream.push_back({
+            .shader = shader2,
+            .bindGroups = { bindGroup },
+            .indexBuffer = indexBuffer,
+            .vertexBuffers = { vertexBuffer2, uvBuffer },
+            .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
+            });
+
+        commandBuffer->BeginRenderPass(renderPass, mainFrame, stream);
+    }
+    commandBuffer->Submit();
 
     gfx::ResourceManager::instance->Flush();
 
@@ -116,6 +129,24 @@ int main()
         });
 
     mainSampler = gfx::ResourceManager::instance->Create(gfx::SamplerDescriptor{});
+     
+    frameTexture = gfx::ResourceManager::instance->Create(gfx::TextureDescriptor{
+        .format = gfx::TextureFormat::BGRA8_UNORM,
+        .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST,
+        .width = 1920,
+        .height = 1080,
+        .view = {
+            .format = gfx::TextureFormat::BGRA8_UNORM,
+            .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST
+        },
+        });
+
+    mainFrame = gfx::ResourceManager::instance->Create(gfx::FrameBufferDescriptor{
+        .renderPass = renderPass,
+        .colorTargets = {
+            frameTexture
+        }
+        });
 
     bindGroupLayout = gfx::ResourceManager::instance->Create(gfx::BindGroupLayoutDescriptor{
         .textureBindings = {
