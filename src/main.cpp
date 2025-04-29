@@ -32,7 +32,7 @@ std::vector<uint8_t> generateCheckerboard(int width, int height, int tileSize) {
 
 void running()
 {
-    gfx::CommandBuffer* commandBuffer = gfx::Renderer::instance->BeginCommandRecording(gfx::CommandBufferType::OFFSCREEN);
+    gfx::CommandBuffer* commandBuffer = gfx::Renderer::instance->BeginCommandRecording(gfx::CommandBufferType::MAIN);
     {
         std::vector<gfx::Draw> stream;
         stream.push_back({
