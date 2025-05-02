@@ -118,14 +118,10 @@ int main()
         .width = 1920,
         .height = 1080,
         .view = {
-			.format = gfx::TextureFormat::BGRA8_UNORM,
-			.usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST
+            .format = gfx::TextureFormat::BGRA8_UNORM,
+            .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST
         },
-        .uploadDesc = {
-            .upload = true,
-            .uploadSize = textData.size(),
-            .uploadData = textData.data()
-        }
+        .upload = utils::Span(textData.data(), textData.size()),
         });
 
     mainSampler = gfx::ResourceManager::instance->Create(gfx::SamplerDescriptor{});
@@ -160,41 +156,41 @@ int main()
     bindGroup = gfx::ResourceManager::instance->Create(gfx::BindGroupDescriptor{
         .layout = bindGroupLayout,
         .textures = {
-            {.slot = 0, .textureView = mainTexture }
+            {.slot = 0, .texture = mainTexture }
         },
         .samplers = {
             {.slot = 1, .sampler = mainSampler }
         }
         });
-
+    
     vertexBuffer1 = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
         .usage = gfx::BufferUsage::VERTEX,
-        .size = sizeof(topLeftQuad),
-        .data = topLeftQuad
+        .byteSize = sizeof(topLeftQuad),
+        .initialData = utils::Span(reinterpret_cast<const uint8_t*>(topLeftQuad), sizeof(topLeftQuad)),
         });
 
     vertexBuffer2 = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
         .usage = gfx::BufferUsage::VERTEX,
-        .size = sizeof(bottomRightQuad),
-        .data = bottomRightQuad
+        .byteSize = sizeof(bottomRightQuad),
+        .initialData = utils::Span(reinterpret_cast<const uint8_t*>(bottomRightQuad), sizeof(bottomRightQuad)),
         });
 
     indexBuffer = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
         .usage = gfx::BufferUsage::INDEX,
-        .size = sizeof(indexData),
-        .data = indexData
+        .byteSize = sizeof(indexData),
+        .initialData = utils::Span(reinterpret_cast<const uint8_t*>(indexData), sizeof(indexData)),
         });
 
     uvBuffer = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
         .usage = gfx::BufferUsage::VERTEX,
-        .size = sizeof(uvData),
-        .data = uvData
+        .byteSize = sizeof(uvData),
+        .initialData = utils::Span(reinterpret_cast<const uint8_t*>(uvData), sizeof(uvData))
         });
 
     normalBuffer = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
         .usage = gfx::BufferUsage::VERTEX,
-        .size = sizeof(normalData),
-        .data = normalData
+        .byteSize = sizeof(normalData),
+        .initialData = utils::Span(reinterpret_cast<const uint8_t*>(normalData), sizeof(normalData))
         });
 
     shader2 = gfx::ResourceManager::instance->Create(gfx::ShaderDescriptor{
@@ -229,6 +225,8 @@ int main()
 			color = texture(sampler2D(meTexture, meSampler), uv); 
 		}
         )"},
+        .bindLayouts = 
+        { bindGroupLayout },
         .graphicsState = {
             .vertexBufferBindings = {
                 {
@@ -246,7 +244,6 @@ int main()
             },
             .renderPassLayout = renderPassLayout,
         },
-        .bindLayouts = { bindGroupLayout }
         });
 
     shader = gfx::ResourceManager::instance->Create(gfx::ShaderDescriptor{
