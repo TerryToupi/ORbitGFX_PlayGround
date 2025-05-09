@@ -4,6 +4,8 @@
 #include <resources/resourceManger.hpp>
 #include <render/renderer.hpp>
 
+#include <imageLoader.hpp>
+
 #include <enums.hpp>
 #include <handle.hpp>
 
@@ -38,26 +40,25 @@ static const float bottomRightQuad[] = {
      0.9f, -0.9f, 0.0f, // 1: Bottom-right
      0.0f,  0.0f, 0.0f, // 2: Top-left
      0.9f,  0.0f, 0.0f  // 3: Top-right
+}; 
+
+static const float fsQuad[] = {
+    -0.9f,  0.9f, 0.0f, // Top-left
+     0.9f,  0.9f, 0.0f, // Top-right
+     0.9f, -0.9f, 0.0f, // Bottom-right
+    -0.9f, -0.9f, 0.0f  // Bottom-left
 };
 
 static const uint32_t indexData[] = {
-    // First triangle
-    0, 1, 2, // Bottom-left, Bottom-right, Top-left
-
-    // Second triangle
-    1, 3, 2  // Bottom-right, Top-right, Top-left
+    0, 1, 2, // First triangle (Top-left, Top-right, Bottom-right)
+    2, 3, 0  // Second triangle (Bottom-right, Bottom-left, Top-left)
 };
 
 static const float uvData[] = {
-    // First triangle
-    0.0f, 0.0f, // Bottom-left
-    1.0f, 0.0f, // Bottom-right
-    0.0f, 1.0f, // Top-left
-
-    // Second triangle
-    1.0f, 0.0f, // Bottom-right
-    1.0f, 1.0f, // Top-right
-    0.0f, 1.0f  // Top-left
+    0.0f, 0.0f, // Top-left
+    1.0f, 0.0f, // Top-right
+    1.0f, 1.0f, // Bottom-right
+    0.0f, 1.0f  // Bottom-left
 };
 
 static const float normalData[] = {

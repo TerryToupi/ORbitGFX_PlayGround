@@ -39,13 +39,6 @@ void running()
             .shader = shader2,
             .bindGroups = { bindGroup },
             .indexBuffer = indexBuffer,
-            .vertexBuffers = { vertexBuffer1, uvBuffer },
-            .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
-            });
-        stream.push_back({
-            .shader = shader2,
-            .bindGroups = { bindGroup },
-            .indexBuffer = indexBuffer,
             .vertexBuffers = { vertexBuffer2, uvBuffer },
             .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
             });
@@ -110,14 +103,14 @@ int main()
         .layout = renderPassLayout
         });
 
-    mainTexture = gfx::ResourceManager::instance->Create(gfx::TextureDescriptor{
-        .format = gfx::TextureFormat::BGRA8_UNORM,
-        .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST,
-        .width = 1920,
-        .height = 1080,
-        .initialData = utils::Span(textData.data(), textData.size())
-        });
-
+    //mainTexture = gfx::ResourceManager::instance->Create(gfx::TextureDescriptor{
+    //    .format = gfx::TextureFormat::BGRA8_UNORM,
+    //    .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST,
+    //    .width = 1920,
+    //    .height = 1080,
+    //    .initialData = utils::Span(textData.data(), textData.size())
+    //    });
+    mainTexture = loadImage("b.png");
     mainSampler = gfx::ResourceManager::instance->Create(gfx::SamplerDescriptor{});
      
     frameTexture = gfx::ResourceManager::instance->Create(gfx::TextureDescriptor{
@@ -161,8 +154,8 @@ int main()
 
     vertexBuffer2 = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
         .usage = gfx::BufferUsage::VERTEX,
-        .byteSize = sizeof(bottomRightQuad),
-        .initialData = utils::Span(reinterpret_cast<const uint8_t*>(bottomRightQuad), sizeof(bottomRightQuad)),
+        .byteSize = sizeof(fsQuad),
+        .initialData = utils::Span(reinterpret_cast<const uint8_t*>(fsQuad), sizeof(fsQuad)),
         });
 
     indexBuffer = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{

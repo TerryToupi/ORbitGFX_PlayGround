@@ -15,7 +15,9 @@ file(GLOB_RECURSE INCLUDE_FILES CONFIGURE_DEPENDS "${INCLUDE}/**.hpp")
 # shaderc
 add_subdirectory(${EXTERNAL}/ORbitGFX)
 
-add_executable(GfxText)
+add_executable(GfxText) 
+
+target_compile_definitions(GfxText PUBLIC ASSETS="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
 
 target_sources(GfxText
     PRIVATE
