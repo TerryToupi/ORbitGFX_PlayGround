@@ -73,8 +73,6 @@ void running()
     }
     commandBuffer->Submit();
 
-    gfx::ResourceManager::instance->Flush();
-
     return;
 }
 
@@ -117,11 +115,7 @@ int main()
         .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST,
         .width = 1920,
         .height = 1080,
-        .view = {
-            .format = gfx::TextureFormat::BGRA8_UNORM,
-            .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST
-        },
-        .upload = utils::Span(textData.data(), textData.size()),
+        .initialData = utils::Span(textData.data(), textData.size())
         });
 
     mainSampler = gfx::ResourceManager::instance->Create(gfx::SamplerDescriptor{});
@@ -131,10 +125,6 @@ int main()
         .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST,
         .width = 1920,
         .height = 1080,
-        .view = {
-            .format = gfx::TextureFormat::BGRA8_UNORM,
-            .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST
-        },
         });
 
     mainFrame = gfx::ResourceManager::instance->Create(gfx::FrameBufferDescriptor{
