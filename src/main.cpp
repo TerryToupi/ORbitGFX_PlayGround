@@ -1,68 +1,48 @@
 #include <test.hpp>
 
-std::vector<uint8_t> generateCheckerboard(int width, int height, int tileSize) {
-    std::vector<uint8_t> texture(width * height * 4); // RGBA format (uint8_t for 8-bit channels)
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            // Determine whether this pixel belongs to a white or black tile
-            bool isWhite = ((x / tileSize) % 2 == (y / tileSize) % 2);
-
-            // Calculate the index in the flat array
-            int index = (y * width + x) * 4;
-
-            // Set the color (white or black) with full opacity
-            if (isWhite) {
-                texture[index] = 255;     // Red
-                texture[index + 1] = 255; // Green
-                texture[index + 2] = 255; // Blue
-                texture[index + 3] = 255; // Alpha (fully opaque)
-            }
-            else {
-                texture[index] = 0;       // Red
-                texture[index + 1] = 0;   // Green
-                texture[index + 2] = 0;   // Blue
-                texture[index + 3] = 255; // Alpha (fully opaque)
-            }
-        }
-    }
-
-    return texture;
-}
-
 void running()
 {
     gfx::CommandBuffer* commandBuffer = gfx::Renderer::instance->BeginCommandRecording(gfx::CommandBufferType::MAIN);
     {
         std::vector<gfx::Draw> stream;
+        auto alloc = uniformBuffer->BumpAllocate<Color>();
+
+        alloc.ptr->r = 1;
+        alloc.ptr->g = 0;
+        alloc.ptr->b = 1;
+        alloc.ptr->a = 1;
+
         stream.push_back({
             .shader = shader2,
             .bindGroups = { bindGroup },
+            .dynamicBuffer = uniformBuffer->GetBuffer(),
             .indexBuffer = indexBuffer,
             .vertexBuffers = { vertexBuffer2, uvBuffer },
+            .dynamicBufferOffset = alloc.offset,
             .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
-            });
+            }); 
 
-        commandBuffer->BeginRenderPass(renderPass, stream);
+        uniformBuffer->Upload();
+        commandBuffer->BeginRenderPass(renderPass, utils::Span<gfx::Draw>(stream.data(), stream.size()));
     }
     {
-        std::vector<gfx::Draw> stream;
-        stream.push_back({
-            .shader = shader2,
-            .bindGroups = { bindGroup },
-            .indexBuffer = indexBuffer,
-            .vertexBuffers = { vertexBuffer1, uvBuffer },
-            .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
-            });
-        stream.push_back({
-            .shader = shader2,
-            .bindGroups = { bindGroup },
-            .indexBuffer = indexBuffer,
-            .vertexBuffers = { vertexBuffer2, uvBuffer },
-            .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
-            });
+        //std::vector<gfx::Draw> stream;
+        //stream.push_back({
+        //    .shader = shader2,
+        //    .bindGroups = { bindGroup },
+        //    .indexBuffer = indexBuffer,
+        //    .vertexBuffers = { vertexBuffer1, uvBuffer },
+        //    .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
+        //    });
+        //stream.push_back({
+        //    .shader = shader2,
+        //    .bindGroups = { bindGroup },
+        //    .indexBuffer = indexBuffer,
+        //    .vertexBuffers = { vertexBuffer2, uvBuffer },
+        //    .triangleCount = (sizeof(indexData) / sizeof(uint32_t)) / 3
+        //    });
 
-        commandBuffer->BeginRenderPass(renderPass, mainFrame, stream);
+        //commandBuffer->BeginRenderPass(renderPass, mainFrame, utils::Span<gfx::Draw>(stream.data(), stream.size()));
     }
     commandBuffer->Submit();
 
@@ -91,11 +71,13 @@ int main()
     };
     Init(windowDesc);
     // -------------------------------------------------------------------------
-    std::vector<uint8_t> textData = generateCheckerboard(1920, 1080, 12);
+
+    gfx::UniformRingBuffer uniform(128 * 1024 * 1024);
+    uniformBuffer = &uniform;
 
     renderPassLayout = gfx::ResourceManager::instance->Create(gfx::RenderPassLayoutDescriptor{
-    .colorTargets = {{.enabled = true, .format = surfaceFormat }},
-    .depth = {.depthTarget = false }
+    .depth = {.depthTarget = false },
+    .colorTargets = {{.format = surfaceFormat }},
         });
 
     renderPass = gfx::ResourceManager::instance->Create(gfx::RenderPassDescriptor{
@@ -103,15 +85,13 @@ int main()
         .layout = renderPassLayout
         });
 
-    //mainTexture = gfx::ResourceManager::instance->Create(gfx::TextureDescriptor{
-    //    .format = gfx::TextureFormat::BGRA8_UNORM,
-    //    .usage = gfx::TextureUsage::TEXTURE_BINDING | gfx::TextureUsage::RENDER_ATTACHMENT | gfx::TextureUsage::COPY_DST,
-    //    .width = 1920,
-    //    .height = 1080,
-    //    .initialData = utils::Span(textData.data(), textData.size())
-    //    });
     mainTexture = loadImage("b.png");
     mainSampler = gfx::ResourceManager::instance->Create(gfx::SamplerDescriptor{});
+
+    utils::Handle<gfx::Buffer> b = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
+        .usage = gfx::BufferUsage::UNIFORM,
+        .byteSize = 64u * 1024
+        });
      
     frameTexture = gfx::ResourceManager::instance->Create(gfx::TextureDescriptor{
         .format = gfx::TextureFormat::BGRA8_UNORM,
@@ -127,17 +107,23 @@ int main()
         }
         });
 
-    bindGroupLayout = gfx::ResourceManager::instance->Create(gfx::BindGroupLayoutDescriptor{
+    bindGroupLayout = gfx::ResourceManager::instance->Create(gfx::BindGroupLayoutDescriptor{ 
+        .bufferBindings = {
+            {.slot = 2 }
+        },
         .textureBindings = {
-            {.slot = 0, .visibility = gfx::ShaderStage::FRAGMENT }
+            {.slot = 0, .type = gfx::TextureSampleType::FLOAT }
         },
         .samplerBindings = {
-            {.slot = 1, .visibility = gfx::ShaderStage::FRAGMENT }
+            {.slot = 1 }
         }
         });
 
     bindGroup = gfx::ResourceManager::instance->Create(gfx::BindGroupDescriptor{
         .layout = bindGroupLayout,
+        .buffers = {
+            {.slot = 2, .buffer = b, .range = 64u * 1024 }
+        },
         .textures = {
             {.slot = 0, .texture = mainTexture }
         },
@@ -176,41 +162,21 @@ int main()
         .initialData = utils::Span(reinterpret_cast<const uint8_t*>(normalData), sizeof(normalData))
         });
 
+    std::vector<uint8_t> vsBytes = loadModule("simple.vert"); 
+    std::vector<uint8_t> fsBytes = loadModule("basic_frag.frag");
+
     shader2 = gfx::ResourceManager::instance->Create(gfx::ShaderDescriptor{
         .type = gfx::ShaderPipelineType::GRAPHICS,
-        .VS = {.enabled = true, .sourceCode = R"(
-        #version 450
-
-        layout(location = 0) in vec3 pos;
-        layout(location = 1) in vec2 uv;
- 
-        layout(location = 0) out vec2 outUV;
-
-        void main()
-		{
-		    gl_Position = vec4(pos, 1.0); // Standard position assignment 
-            outUV = uv; 
-		}
-        )"},
-        .PS = {.enabled = true, .sourceCode = R"(
-		#version 450
-	 
-		// Fragment Shader
-		layout(location = 0) in vec2 uv; // Input color with location 0
-
-        layout(set = 0, binding = 0) uniform texture2D meTexture;
-        layout(set = 0, binding = 1) uniform sampler meSampler;
-
-		layout(location = 0) out vec4 color;    // Output color with location 0
-
-		void main() {
-            
-			color = texture(sampler2D(meTexture, meSampler), uv); 
-		}
-        )"},
-        .bindLayouts = 
-        { bindGroupLayout },
+        .VS = {.enabled = true, .sourceCode = utils::Span<uint8_t>(vsBytes.data(), vsBytes.size()) },
+        .PS = {.enabled = true, .sourceCode = utils::Span<uint8_t>(fsBytes.data(), fsBytes.size()) },
+        .bindLayouts = {
+            { bindGroupLayout },
+            {},
+            {},
+            { uniformBuffer->GetLayout() }
+        },
         .graphicsState = {
+            .depthTest = gfx::Compare::GREATER_OR_EQUAL,
             .vertexBufferBindings = {
                 {
                     .byteStride = 3 * sizeof(float),
@@ -227,57 +193,6 @@ int main()
             },
             .renderPassLayout = renderPassLayout,
         },
-        });
-
-    shader = gfx::ResourceManager::instance->Create(gfx::ShaderDescriptor{
-        .type = gfx::ShaderPipelineType::GRAPHICS,
-        .VS = {.enabled = true, .sourceCode = R"(
-        #version 450
-
-		// Vertex Shader
-		layout(location = 0) in vec3 pos;       // Input position with location 0
-		layout(location = 1) in vec2 uv;       // Input uv with location 0
-		layout(location = 2) in vec3 norm;       // Input norm with location 0
-		layout(location = 0) out vec4 fragColor; // Output color with location 0
-
-		void main() {
-			gl_Position = vec4(pos, 1.0); // Standard position assignment
-		}
-        )"},
-        .PS = {.enabled = true, .sourceCode = R"(
-		#version 450
-	 
-		// Fragment Shader
-		layout(location = 0) in vec4 fragColor; // Input color with location 0
-		layout(location = 0) out vec4 color;    // Output color with location 0
-
-		void main() {
-			color = vec4(1.0, 1.0, 0.0, 1.0); // Set fragment color to yellow
-		}
-        )"},
-        .graphicsState = {
-            .vertexBufferBindings = {
-                {
-                    .byteStride = 3 * sizeof(float),
-                    .attributes = {
-                        {.byteOffset = 0, .format = gfx::VertexFormat::F32x3},
-                    }
-                },
-                {
-                    .byteStride = 2 * sizeof(float),
-                    .attributes = {
-                        {.byteOffset = 0, .format = gfx::VertexFormat::F32x2},
-                    }
-                },
-                {
-                    .byteStride = 3 * sizeof(float),
-                    .attributes = {
-                        {.byteOffset = 0, .format = gfx::VertexFormat::F32x3},
-                    }
-                }
-            },
-            .renderPassLayout = renderPassLayout,
-        }
         });
     // -------------------------------------------------------------------------
     gfx::Window::instance->Run(running);

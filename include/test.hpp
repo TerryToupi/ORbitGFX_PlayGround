@@ -3,11 +3,15 @@
 
 #include <resources/resourceManger.hpp>
 #include <render/renderer.hpp>
+#include <render/uniforms.hpp>
 
 #include <imageLoader.hpp>
+#include <shaderModuleLoader.hpp>
 
 #include <enums.hpp>
 #include <handle.hpp>
+
+#include <iostream>
 
 utils::Handle<gfx::RenderPassLayout> renderPassLayout;
 utils::Handle<gfx::RenderPass> renderPass;
@@ -24,7 +28,17 @@ utils::Handle<gfx::FrameBuffer> mainFrame;
 utils::Handle<gfx::Texture> frameTexture;
 utils::Handle<gfx::BindGroup> bindGroup;
 utils::Handle<gfx::BindGroupLayout> bindGroupLayout;
-gfx::TextureFormat surfaceFormat;
+gfx::TextureFormat surfaceFormat; 
+
+gfx::UniformRingBuffer* uniformBuffer; 
+
+struct Color
+{
+    float r = 0;
+    float g = 0;
+    float b = 0; 
+    float a = 0;
+};
 
 static const float topLeftQuad[] = {
     // Unique vertices for the top-left quad
