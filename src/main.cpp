@@ -12,6 +12,13 @@ void running()
         alloc.ptr->b = 1;
         alloc.ptr->a = 1;
 
+        auto alloc1 = uniformBuffer->BumpAllocate<Color>(); 
+
+        alloc1.ptr->r = 1;
+        alloc1.ptr->g = 0;
+        alloc1.ptr->b = 0;
+        alloc1.ptr->a = 1;
+
         stream.push_back({
             .shader = shader2,
             .bindGroups = { bindGroup },
@@ -163,7 +170,7 @@ int main()
         });
 
     std::vector<uint8_t> vsBytes = loadModule("simple.vert"); 
-    std::vector<uint8_t> fsBytes = loadModule("basic_frag.frag");
+    std::vector<uint8_t> fsBytes = loadModule("simple.frag");
 
     shader2 = gfx::ResourceManager::instance->Create(gfx::ShaderDescriptor{
         .type = gfx::ShaderPipelineType::GRAPHICS,
