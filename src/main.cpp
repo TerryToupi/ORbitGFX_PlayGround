@@ -1,4 +1,5 @@
 #include <test.hpp>
+#include <renderGraph/renderGraph.hpp>
 
 void running()
 {
@@ -78,6 +79,7 @@ int main()
     };
     Init(windowDesc);
     // -------------------------------------------------------------------------
+    renderGraph::init();
 
     gfx::UniformRingBuffer uniform(128 * 1024 * 1024);
     uniformBuffer = &uniform;
@@ -203,6 +205,7 @@ int main()
         });
     // -------------------------------------------------------------------------
     gfx::Window::instance->Run(running);
+    renderGraph::destroy();
     ShutDown();
 
     return 0;

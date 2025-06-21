@@ -5,8 +5,8 @@
 #include <render/renderer.hpp>
 #include <render/uniforms.hpp>
 
-#include <imageLoader.hpp>
-#include <shaderModuleLoader.hpp>
+#include <loaders/imageLoader.hpp>
+#include <loaders/shaderModuleLoader.hpp>
 
 #include <enums.hpp>
 #include <handle.hpp>
