@@ -110,7 +110,6 @@ int main()
         });
 
     mainFrame = gfx::ResourceManager::instance->Create(gfx::FrameBufferDescriptor{
-        .renderPass = renderPass,
         .colorTargets = {
             frameTexture
         }

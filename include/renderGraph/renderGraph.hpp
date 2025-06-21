@@ -1,48 +1,68 @@
 #ifndef __RENDER_GRAPH_HPP__
 #define __RENDER_GRAPH_HPP__
 
+#include <vector>
 #include <math.hpp>
 #include <mesh.hpp>
+#include <resources/resourceManger.hpp>
+#include <render/renderer.hpp>
+#include <render/uniforms.hpp>
+#include <render/commands.hpp>
+#include <render/passRenderer.hpp>
 
-#include <handle.hpp>
-#include <resources/bindGroup.hpp>
-#include <resources/bindGroupLayout.hpp>
-#include <resources/buffer.hpp>
-
-namespace renderGlobals
+struct Globals 
 {
-	struct data
-	{
-		Mat4 viewProj;
-		Vec3 cameraPos;
-		float _padding;
-	};
-}
+	Mat4 viewProj;
+	Vec3 cameraPos;
+	float _padding;
+};
 
-namespace materialGlobals
+struct Light
 {
-	struct data
-	{
-		float roughness;
-	};
-}
+	Vec3 color;
+	float intensity;
+	Vec3 pos;
+	float _padding;
+};
 
-namespace shaderGlobals
+struct CallData
 {
-	struct lightData
-	{
-		Vec3 lightColor;
-		float lightIntensity;
-		Vec3 lightPos;
-		float _padding;
-	};
-}
+	Mat4 model;
+	Mat4 inverseModel;
+};
 
 namespace renderGraph
 {
 	void init();
 	void render(Meshes& meshes);
 	void destroy(); 
+}
+
+namespace offscreenStage 
+{
+	namespace pass 
+	{
+		void init();
+		void render(gfx::CommandBuffer* cmdBuf, Meshes& meshes);
+		void destroy(); 
+	}
+}
+
+namespace mainStage
+{
+	namespace mainPass 
+	{
+		void init();
+		void render(gfx::CommandBuffer* cmdBuf, Meshes& meshes);
+		void destroy(); 
+	}
+
+	namespace surfacePass
+	{
+		void init();
+		void render(gfx::CommandBuffer* cmdBuf);
+		void destroy(); 
+	}
 }
 
 #endif // !__RENDER_GRAPH_HPP__
