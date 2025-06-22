@@ -4,11 +4,15 @@
 #include <vector>
 #include <math.hpp>
 #include <mesh.hpp>
+#include <window.hpp>
 #include <resources/resourceManger.hpp>
 #include <render/renderer.hpp>
 #include <render/uniforms.hpp>
 #include <render/commands.hpp>
 #include <render/passRenderer.hpp>
+
+#include <loaders/shaderModuleLoader.hpp>
+#include <loaders/imageLoader.hpp>
 
 struct Globals 
 {

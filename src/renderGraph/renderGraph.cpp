@@ -20,6 +20,26 @@ utils::Handle<gfx::RenderPass> mainRenderPass;
 utils::Handle<gfx::RenderPassLayout> mainRenderLayout;
 utils::Handle<gfx::Shader> mainShader;
 
+//SURFACE PASS
+utils::Handle<gfx::RenderPass> surfaceRenderPass;
+utils::Handle<gfx::RenderPassLayout> surfaceRenderLayout;
+utils::Handle<gfx::BindGroup> surfaceBindGroup;
+utils::Handle<gfx::BindGroupLayout> surfaceBindGroupLayout;
+utils::Handle<gfx::Shader> surfaceShader;
+utils::Handle<gfx::Buffer> surfaceVertex;
+utils::Handle<gfx::Buffer> surfaceIndex;
+
+float surfaceQuad[] = {
+  -1.0, -1.0, // bottom-left
+   1.0, -1.0, // bottom-right
+   1.0,  1.0, // top-right
+  -1.0,  1.0, // top-left
+};
+uint32_t surfaceQuadIndices[] = {
+	0, 1, 2,    // first triangle
+	2, 3, 0     // second triangle
+};
+
 
 void renderGraph::init()
 { 
@@ -71,6 +91,11 @@ void renderGraph::init()
 			{mainColorTexture}
 		}
 		});
+
+	// INITILIZE STAGES
+	offscreenStage::pass::init();
+	mainStage::mainPass::init();
+	mainStage::surfacePass::init();
 }
 
 void renderGraph::render(Meshes& meshes)
@@ -93,6 +118,11 @@ void renderGraph::render(Meshes& meshes)
 
 void renderGraph::destroy()
 {  
+	//DESTROY STAGES
+	offscreenStage::pass::destroy();
+	mainStage::mainPass::destroy();
+	mainStage::surfacePass::destroy();
+
 	uniforms.Destroy();
 
 	gfx::ResourceManager::instance->Remove(globalsLayout);
@@ -146,14 +176,14 @@ void mainStage::mainPass::init()
 		});
 
 	mainRenderLayout = gfx::ResourceManager::instance->Create(gfx::RenderPassLayoutDescriptor{
-	.depth = {
-		.depthTarget = true,
-		.depthTargetFormat = gfx::TextureFormat::D32_FLOAT
-		},
-	.colorTargets = {
-		{.enabled = true, .format = gfx::TextureFormat::RGBA8_UNORM}
-		}
-		});
+		.depth = {
+			.depthTarget = true,
+			.depthTargetFormat = gfx::TextureFormat::D32_FLOAT
+			},
+		.colorTargets = {
+			{.enabled = true, .format = gfx::TextureFormat::RGBA8_UNORM}
+			}
+			});
 	mainRenderPass = gfx::ResourceManager::instance->Create(gfx::RenderPassDescriptor{
 		.depthTarget = {
 			.loadOp = gfx::LoadOperation::CLEAR,
@@ -207,12 +237,95 @@ void mainStage::mainPass::destroy()
 
 void mainStage::surfacePass::init()
 {
+	surfaceRenderLayout = gfx::ResourceManager::instance->Create(gfx::RenderPassLayoutDescriptor{
+		.colorTargets = {
+			{.enabled = true, .format = gfx::Window::instance->GetSurfaceFormat()}
+		}
+		});
+	surfaceRenderPass = gfx::ResourceManager::instance->Create(gfx::RenderPassDescriptor{
+		.colorTargets = {
+			{.loadOp = gfx::LoadOperation::CLEAR, .storeOp = gfx::StoreOperation::STORE}
+		},
+		.layout = surfaceRenderLayout,
+		});
+
+	surfaceBindGroupLayout = gfx::ResourceManager::instance->Create(gfx::BindGroupLayoutDescriptor{
+		.textureBindings = {
+			{.slot = 0}
+		},
+		.samplerBindings = {
+			{.slot = 1}
+		}
+		});
+
+	//utils::Handle<gfx::Texture> debugTexture = loadImage("textures/b.png");
+	surfaceBindGroup = gfx::ResourceManager::instance->Create(gfx::BindGroupDescriptor{
+		.layout = surfaceBindGroupLayout,
+		.textures = {
+			{.slot = 0, .texture = mainColorTexture}
+		},
+		.samplers = {
+			{.slot = 1, .sampler = gfx::ResourceManager::instance->Create(gfx::SamplerDescriptor{})}
+		}
+		}); 
+
+	surfaceVertex = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
+		.usage = gfx::BufferUsage::VERTEX,
+		.byteSize = sizeof(surfaceQuad),
+		.initialData = utils::Span<uint8_t>(reinterpret_cast<const uint8_t*>(surfaceQuad), 1)
+		});
+	surfaceIndex= gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
+		.usage = gfx::BufferUsage::INDEX,
+		.byteSize = sizeof(surfaceQuadIndices),
+		.initialData = utils::Span<uint8_t>(reinterpret_cast<const uint8_t*>(surfaceQuadIndices), 1)
+		});
+
+	std::vector<uint8_t> vsModule = loadModule("shaders/surface_vert.glsl");
+	std::vector<uint8_t> fsModule = loadModule("shaders/surface_frag.glsl");
+	surfaceShader = gfx::ResourceManager::instance->Create(gfx::ShaderDescriptor{
+		.type = gfx::ShaderPipelineType::GRAPHICS,
+		.VS = {.enabled = true, .sourceCode = utils::Span<uint8_t>(vsModule.data(), vsModule.size())},
+		.PS = {.enabled = true, .sourceCode = utils::Span<uint8_t>(fsModule.data(), fsModule.size())},
+		.bindLayouts = {
+			{ surfaceBindGroupLayout },
+			{},
+			{},
+			{}
+		},
+		.graphicsState = {
+			.vertexBufferBindings = {
+				{
+					.byteStride = 2 * sizeof(float), 
+					.attributes = {
+						{.byteOffset = 0, .format = gfx::VertexFormat::F32x2}
+					}
+				}
+			},
+			.renderPassLayout = surfaceRenderLayout
+		}
+		});
 }
 
 void mainStage::surfacePass::render(gfx::CommandBuffer* cmdBuf)
-{
+{ 
+	gfx::Draw draw{
+		.shader = surfaceShader,
+		.bindGroups = { surfaceBindGroup },
+		.indexBuffer = surfaceIndex,
+		.vertexBuffers = { surfaceVertex },
+		.triangleCount = 2
+	};
+
+	cmdBuf->BeginRenderPass(surfaceRenderPass, utils::Span<gfx::Draw>(&draw, 1));
 }
 
 void mainStage::surfacePass::destroy()
 {
+	gfx::ResourceManager::instance->Remove(surfaceRenderLayout);
+	gfx::ResourceManager::instance->Remove(surfaceRenderPass);
+	gfx::ResourceManager::instance->Remove(surfaceBindGroupLayout);
+	gfx::ResourceManager::instance->Remove(surfaceBindGroup);
+	gfx::ResourceManager::instance->Remove(surfaceVertex);
+	gfx::ResourceManager::instance->Remove(surfaceIndex);
+	gfx::ResourceManager::instance->Remove(surfaceShader);
 }
