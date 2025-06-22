@@ -15,6 +15,7 @@ file(GLOB_RECURSE INCLUDE_FILES CONFIGURE_DEPENDS "${INCLUDE}/**.hpp")
 
 add_subdirectory(${EXTERNAL}/ORbitGFX)
 add_subdirectory(${EXTERNAL}/glm)
+add_subdirectory(${EXTERNAL}/assimp)
 
 add_executable(GFX) 
 
@@ -35,6 +36,7 @@ target_link_libraries(GFX
     PRIVATE
     gfx::ORbit
     glm
+    assimp
 )
 
 # POST BUILD

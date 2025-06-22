@@ -214,7 +214,7 @@ void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
 			.bindGroups = { globalsGroup, utils::Handle<gfx::BindGroup>(), mainBindGroup },
 			.dynamicBuffer = uniforms.GetBuffer(),
 			.indexBuffer = mesh.index,
-			.vertexBuffers = { mesh.vertex1, mesh.vertex2 },
+			.vertexBuffers = { mesh.vertex1 },
 			.dynamicBufferOffset = alloc.offset,
 			.triangleCount = mesh.triangles
 			});
