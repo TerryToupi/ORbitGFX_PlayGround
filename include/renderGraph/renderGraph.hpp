@@ -13,6 +13,7 @@
 
 #include <loaders/shaderModuleLoader.hpp>
 #include <loaders/imageLoader.hpp>
+#include <camera/editorCamera.hpp>
 
 struct Globals 
 {
@@ -38,7 +39,7 @@ struct CallData
 namespace renderGraph
 {
 	void init();
-	void render(Meshes& meshes);
+	void render(Meshes& meshes, EditorCamera& cam);
 	void destroy(); 
 }
 

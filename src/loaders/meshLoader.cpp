@@ -3,6 +3,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
+#include <resources/resourceManger.hpp>
+
 #include <iostream>
 
 void loadMesh(const char* path, Meshes& meshes, Vec3 position, Vec3 rotation, Vec3 scale)
@@ -21,6 +24,11 @@ void loadMesh(const char* path, Meshes& meshes, Vec3 position, Vec3 rotation, Ve
     
     std::cout << "Model loaded: " << file << std::endl;
     std::cout << "Meshes: " << scene->mNumMeshes << std::endl;
+
+    Mat4 S = glm::scale(glm::mat4(1.0f), scale);
+    Mat4 R = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+    Mat4 T = glm::translate(glm::mat4(1.0f), position);
+    Mat4 worldMatrix = T * R * S;
 
     meshes.reserve(meshes.size() + scene->mNumMeshes);
 
@@ -48,11 +56,21 @@ void loadMesh(const char* path, Meshes& meshes, Vec3 position, Vec3 rotation, Ve
             indices.emplace_back(mesh->mFaces[i].mIndices[1]);
             indices.emplace_back(mesh->mFaces[i].mIndices[2]);
         }
-        
-        // Example: print out the first 3 vertices
-        //for (unsigned int v = 0; v < std::min(3u, mesh->mNumVertices); ++v) {
-        //    aiVector3D pos = mesh->mVertices[v];
-        //    std::cout << "  Vertex " << v << ": (" << pos.x << ", " << pos.y << ", " << pos.z << ")\n";
-        //}
+
+        meshes.push_back({
+            .vertex1 = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
+                .usage = gfx::BufferUsage::VERTEX,
+                .byteSize = position.size() * sizeof(float),
+                .initialData = utils::Span<uint8_t>(reinterpret_cast<const uint8_t*>(position.data()), position.size() * sizeof(float))
+            }),
+            .index = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
+                .usage = gfx::BufferUsage::INDEX,
+                .byteSize = indices.size() * sizeof(uint32_t),
+                .initialData = utils::Span<uint8_t>(reinterpret_cast<const uint8_t*>(indices.data()), indices.size() * sizeof(uint32_t))
+            }),
+            .model = worldMatrix, 
+            .inverseModel = glm::inverse(worldMatrix),
+            .triangles = mesh->mNumFaces
+		});
     }
 }

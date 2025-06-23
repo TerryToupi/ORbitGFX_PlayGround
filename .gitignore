@@ -401,3 +401,6 @@ FodyWeavers.xsd
 
 # CMake Binaries
 out/
+
+# models
+assets/meshes/

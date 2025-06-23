@@ -45,21 +45,9 @@ void renderGraph::init()
 { 
 	uniforms = gfx::UniformRingBuffer(32 * 1024 * 1024);
 
-	Vec3 eye = Vec3(0.0, 0.0, -1.0);
-	Vec3 target = Vec3(0.0, 0.0, 0.0);
-	Vec3 up = Vec3(0.0, 1.0, 0.0);
-	Mat4 view = glm::lookAt(eye, target, up);
-	Mat4 proj = glm::perspectiveZO(glm::radians(60.0f), 21.0f / 9.0f, 0.01f, 100.0f);
-
-	Globals globals = {
-		.viewProj = proj * view,
-		.cameraPos = eye
-	};
-
 	globalsBuffer = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
 		.usage = gfx::BufferUsage::UNIFORM,
 		.byteSize = sizeof(Globals),
-		.initialData = utils::Span(reinterpret_cast<const uint8_t*>(&globals), sizeof(globals))
 		});
 	globalsLayout = gfx::ResourceManager::instance->Create(gfx::BindGroupLayoutDescriptor{
 		.bufferBindings = {
@@ -98,14 +86,21 @@ void renderGraph::init()
 	mainStage::surfacePass::init();
 }
 
-void renderGraph::render(Meshes& meshes)
+void renderGraph::render(Meshes& meshes, EditorCamera& cam)
 { 
+	Globals globals = {
+		.viewProj = cam.getViewProjMatrix(),
+		.cameraPos = cam.getCameraPos()
+	};
+	gfx::ResourceManager::instance->SetBufferData(globalsBuffer, 0, (void*)(&globals), sizeof(Globals));
+
 	// OFFSCREEN RENDERING
 	//{
 	//	gfx::CommandBuffer* command = gfx::Renderer::instance->BeginCommandRecording(gfx::CommandBufferType::OFFSCREEN);
 	//	offscreenStage::pass::render(command, meshes);
 	//	command->Submit();
 	//}
+	
 
 	// MAIN RENDERING
 	{
@@ -198,6 +193,32 @@ void mainStage::mainPass::init()
 		.layout = mainRenderLayout,
 		});
 
+	std::vector<uint8_t> vsModule = loadModule("shaders/main_vert.glsl");
+	std::vector<uint8_t> fsModule = loadModule("shaders/main_frag.glsl");
+	mainShader = gfx::ResourceManager::instance->Create(gfx::ShaderDescriptor{
+		.type = gfx::ShaderPipelineType::GRAPHICS,
+		.VS = {.enabled = true, .sourceCode = utils::Span<uint8_t>(vsModule.data(), vsModule.size())},
+		.PS = {.enabled = true, .sourceCode = utils::Span<uint8_t>(fsModule.data(), fsModule.size())},
+		.bindLayouts = {
+			{ globalsLayout },
+			{},
+			{},
+			{ uniforms.GetLayout() }
+		},
+		.graphicsState = {
+			.depthTest = gfx::Compare::LESS,
+			.vertexBufferBindings = {
+				{
+					.byteStride = 3 * sizeof(float),
+					.attributes = {
+						{.byteOffset = 0, .format = gfx::VertexFormat::F32x3}
+					}
+				}
+			},
+			.renderPassLayout = mainRenderLayout
+		}
+		});
+
 }
 
 void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
@@ -211,7 +232,7 @@ void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
 
 		stream.push_back({
 			.shader = mainShader,
-			.bindGroups = { globalsGroup, utils::Handle<gfx::BindGroup>(), mainBindGroup },
+			.bindGroups = { globalsGroup },
 			.dynamicBuffer = uniforms.GetBuffer(),
 			.indexBuffer = mesh.index,
 			.vertexBuffers = { mesh.vertex1 },
@@ -231,6 +252,7 @@ void mainStage::mainPass::destroy()
 	gfx::ResourceManager::instance->Remove(mainBindGroup);
 	gfx::ResourceManager::instance->Remove(mainRenderLayout);
 	gfx::ResourceManager::instance->Remove(mainRenderPass);
+	gfx::ResourceManager::instance->Remove(mainShader);
 }
 
 
