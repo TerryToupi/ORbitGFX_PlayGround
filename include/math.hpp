@@ -12,4 +12,6 @@ using Mat4 = glm::mat4x4;
 using Vec4 = glm::vec4;
 using Vec3 = glm::vec3;
 
+using Half = glm::detail::hdata;
+
 #endif // !__MATH_HPP__

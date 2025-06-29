@@ -148,9 +148,9 @@ void offscreenStage::pass::destroy()
 void mainStage::mainPass::init()
 { 
 	Light light{
-		.color = Vec3(1.0f, 0.5f, 0.0f),
+		.color = Vec3(1.0f, 0.0f, 0.0f),
 		.intensity = 1.0f,
-		.pos = Vec3(30.0f, 30.0f, 30.0f)
+		.pos = Vec3(0.0f, 50.0f, 0.0f)
 	};
 
 	mainLightBuffer = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
@@ -202,16 +202,25 @@ void mainStage::mainPass::init()
 		.bindLayouts = {
 			{ globalsLayout },
 			{},
-			{},
+			{ mainBindLayout },
 			{ uniforms.GetLayout() }
 		},
 		.graphicsState = {
 			.depthTest = gfx::Compare::LESS,
 			.vertexBufferBindings = {
 				{
-					.byteStride = 3 * sizeof(float),
+					.byteStride = 12,
 					.attributes = {
 						{.byteOffset = 0, .format = gfx::VertexFormat::F32x3}
+					}
+				},
+				{
+					.byteStride = 24,
+					.attributes = {
+						{.byteOffset = 0, .format = gfx::VertexFormat::F16x4},
+						{.byteOffset = 8, .format = gfx::VertexFormat::F16x4},
+						{.byteOffset = 16, .format = gfx::VertexFormat::UNORM8x4},
+						{.byteOffset = 20, .format = gfx::VertexFormat::F16x2},
 					}
 				}
 			},
@@ -232,10 +241,10 @@ void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
 
 		stream.Encode({
 			.shader = mainShader,
-			.bindGroups = { globalsGroup },
+			.bindGroups = { globalsGroup, utils::Handle<gfx::BindGroup>(), mainBindGroup },
 			.dynamicBuffer = uniforms.GetBuffer(),
 			.indexBuffer = mesh.index,
-			.vertexBuffers = { mesh.vertex1 },
+			.vertexBuffers = { mesh.vertex1, mesh.vertex2 },
 			.dynamicBufferOffset = alloc.offset,
 			.triangleCount = mesh.triangles
 			});
