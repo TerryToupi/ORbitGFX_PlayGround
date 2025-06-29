@@ -33,7 +33,8 @@ int main()
 {
     gfx::Renderer::INIT();
 
-    loadMesh("/meshes/dragon.obj", meshes, Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0), Vec3(1.0, 1.0, 1.0));
+    loadMesh("meshes/sponza/sponza.obj", meshes, Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0), Vec3(0.05, 0.05, 0.05));
+    loadMesh("meshes/titanic/titanic.obj", meshes, Vec3(10.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0), Vec3(0.1, 0.1, 0.1));
 
     renderGraph::init();
     cam = EditorCamera(Vec3(0.0f, 0.0f, 0.0f));
