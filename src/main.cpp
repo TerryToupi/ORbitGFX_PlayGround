@@ -9,18 +9,22 @@ EditorCamera cam;
 
 void mainLoop()
 { 
-    //double x, y;
-    //gfx::Window::instance->GetMousePos(&x, &y);
-    cam.ProcessMouseMovement(0, 0);
+	double x, y;
+	gfx::Window::instance->GetMousePos(&x, &y);
+	
+	if (gfx::Window::instance->GetMouseButton(Button::BUTTON_RIGHT))
+		cam.processMouseMovement(x, y, true);
+	else
+		cam.processMouseMovement(x, y, false);
 
-    if (gfx::Window::instance->GetKey(Key::W))
-        cam.ProcessKeyboard(true, false, false, false, 0.05);
-    if (gfx::Window::instance->GetKey(Key::S))
-        cam.ProcessKeyboard(false, true, false, false, 0.05);
-    if (gfx::Window::instance->GetKey(Key::D))
-        cam.ProcessKeyboard(false, false, true, false, 0.05);
-    if (gfx::Window::instance->GetKey(Key::A))
-        cam.ProcessKeyboard(false, false, false, true, 0.05);
+	if (gfx::Window::instance->GetKey(Key::W))
+		cam.processKeyboard(true, false, false, false, 0.005);
+	if (gfx::Window::instance->GetKey(Key::S))
+		cam.processKeyboard(false, true, false, false, 0.005);
+	if (gfx::Window::instance->GetKey(Key::A))
+		cam.processKeyboard(false, false, true, false, 0.005);
+	if (gfx::Window::instance->GetKey(Key::D))
+		cam.processKeyboard(false, false, false, true, 0.005);
 
     renderGraph::render(meshes, cam);
 }

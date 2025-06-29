@@ -223,14 +223,14 @@ void mainStage::mainPass::init()
 
 void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
 { 
-	std::vector<gfx::Draw> stream;
+	gfx::DrawStreamEncoder stream;
 	for (const auto& mesh : meshes)
 	{
 		auto alloc = uniforms.BumpAllocate<CallData>();
 		alloc.ptr->model = mesh.model;
 		alloc.ptr->inverseModel = mesh.inverseModel;
 
-		stream.push_back({
+		stream.Encode({
 			.shader = mainShader,
 			.bindGroups = { globalsGroup },
 			.dynamicBuffer = uniforms.GetBuffer(),
@@ -242,7 +242,7 @@ void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
 	} 
 
 	uniforms.Upload();
-	cmdBuf->BeginRenderPass(mainRenderPass, mainFrameBuffer, utils::Span<gfx::Draw>(stream.data(), stream.size()));
+	cmdBuf->BeginRenderPass(mainRenderPass, mainFrameBuffer, utils::Span<uint32_t>(stream.Get().data(), stream.Get().size()));
 }
 
 void mainStage::mainPass::destroy()
@@ -330,15 +330,16 @@ void mainStage::surfacePass::init()
 
 void mainStage::surfacePass::render(gfx::CommandBuffer* cmdBuf)
 { 
-	gfx::Draw draw{
+	gfx::DrawStreamEncoder encoder;
+	encoder.Encode({
 		.shader = surfaceShader,
 		.bindGroups = { surfaceBindGroup },
 		.indexBuffer = surfaceIndex,
 		.vertexBuffers = { surfaceVertex },
 		.triangleCount = 2
-	};
+	});
 
-	cmdBuf->BeginRenderPass(surfaceRenderPass, utils::Span<gfx::Draw>(&draw, 1));
+	cmdBuf->BeginRenderPass(surfaceRenderPass, utils::Span<uint32_t>(encoder.Get().data(), encoder.Get().size()));
 }
 
 void mainStage::surfacePass::destroy()
