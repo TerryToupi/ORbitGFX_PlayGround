@@ -99,7 +99,7 @@ EditorCamera::EditorCamera(Vec3 position, Vec3 worldUp, float yaw, float pitch)
     m_WorldUp(worldUp),
     m_Yaw(yaw),
     m_Pitch(pitch),
-    m_Fov(FOV), m_Aspect(21.0f / 9.0f), m_Near(0.01f), m_Far(100.0f),
+    m_Fov(FOV), m_Aspect(21.0f / 9.0f), m_Near(0.01f), m_Far(200.0f),
     m_MouseX(0.0f),
     m_MouseY(0.0f)
 {

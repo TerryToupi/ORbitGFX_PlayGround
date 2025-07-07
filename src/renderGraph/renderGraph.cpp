@@ -41,7 +41,7 @@ uint32_t surfaceQuadIndices[] = {
 };
 
 
-void renderGraph::init()
+void renderGraph::init(utils::Handle<gfx::BindGroupLayout> material)
 { 
 	uniforms = gfx::UniformRingBuffer(32 * 1024 * 1024);
 
@@ -81,8 +81,8 @@ void renderGraph::init()
 		});
 
 	// INITILIZE STAGES
-	offscreenStage::pass::init();
-	mainStage::mainPass::init();
+	offscreenStage::pass::init(material);
+	mainStage::mainPass::init(material);
 	mainStage::surfacePass::init();
 }
 
@@ -131,7 +131,7 @@ void renderGraph::destroy()
 
 
 
-void offscreenStage::pass::init()
+void offscreenStage::pass::init(utils::Handle<gfx::BindGroupLayout> material)
 {
 }
 
@@ -145,7 +145,7 @@ void offscreenStage::pass::destroy()
 
 
 
-void mainStage::mainPass::init()
+void mainStage::mainPass::init(utils::Handle<gfx::BindGroupLayout> material)
 { 
 	Light light{
 		.color = Vec3(1.0f, 0.0f, 0.0f),
@@ -201,7 +201,7 @@ void mainStage::mainPass::init()
 		.PS = {.enabled = true, .sourceCode = utils::Span<uint8_t>(fsModule.data(), fsModule.size())},
 		.bindLayouts = {
 			{ globalsLayout },
-			{},
+			{ material },
 			{ mainBindLayout },
 			{ uniforms.GetLayout() }
 		},
@@ -241,7 +241,7 @@ void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
 
 		stream.Encode({
 			.shader = mainShader,
-			.bindGroups = { globalsGroup, utils::Handle<gfx::BindGroup>(), mainBindGroup },
+			.bindGroups = { globalsGroup, mesh.materialBG, mainBindGroup },
 			.dynamicBuffer = uniforms.GetBuffer(),
 			.indexBuffer = mesh.index,
 			.vertexBuffers = { mesh.vertex1, mesh.vertex2 },

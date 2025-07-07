@@ -3,9 +3,6 @@
 layout(location = 0) in vec3 in_position; 
 layout(location = 1) in vec3 in_normal;
 layout(location = 2) in vec3 in_color;
-layout(location = 3) in vec3 in_tangentLightPos;
-layout(location = 4) in vec3 in_tangentViewPos;
-layout(location = 5) in vec3 in_tangentFragPos;
 
 layout(location = 0) out vec4 out_color;
 
@@ -25,11 +22,11 @@ void main() {
 
     vec3 normal = normalize(in_normal);
 
-    vec3 lightDir = normalize(in_tangentLightPos - in_tangentFragPos);
+    vec3 lightDir = normalize(u_light.lightPos - in_position);
     float diff = max(dot(lightDir, normal), 0.0);
     vec3 diffuse = diff * in_color;
 
-    vec3 viewDir = normalize(in_tangentViewPos - in_tangentFragPos);
+    vec3 viewDir = normalize(u_globals.cameraPos - in_position);
     vec3 reflectDir = reflect(-lightDir, normal);
 
     vec3 halfwayDir = normalize(lightDir + viewDir);  

@@ -7,6 +7,8 @@
 Meshes meshes;
 EditorCamera cam;
 
+utils::Handle<gfx::BindGroupLayout> material;
+
 void mainLoop()
 { 
 	double x, y;
@@ -33,10 +35,18 @@ int main()
 {
     gfx::Renderer::INIT();
 
-    loadMesh("meshes/sponza/sponza.obj", meshes, Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0), Vec3(0.05, 0.05, 0.05));
-    loadMesh("meshes/titanic/titanic.obj", meshes, Vec3(10.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0), Vec3(0.1, 0.1, 0.1));
+	material = gfx::ResourceManager::instance->Create(gfx::BindGroupLayoutDescriptor{
+			.textureBindings = {
+				{.slot = 0}
+			},
+			.samplerBindings = {
+				{.slot = 1}
+			}
+		});
 
-    renderGraph::init();
+    loadMesh("meshes/sponza/scene.gltf", meshes, material, Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0), Vec3(0.05, 0.05, 0.05));
+
+    renderGraph::init(material);
     cam = EditorCamera(Vec3(0.0f, 0.0f, 0.0f));
     gfx::Window::instance->Run(mainLoop);
     renderGraph::destroy();

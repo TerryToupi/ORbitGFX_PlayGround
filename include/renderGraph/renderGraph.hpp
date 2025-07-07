@@ -38,7 +38,7 @@ struct CallData
 
 namespace renderGraph
 {
-	void init();
+	void init(utils::Handle<gfx::BindGroupLayout> material);
 	void render(Meshes& meshes, EditorCamera& cam);
 	void destroy(); 
 }
@@ -47,7 +47,7 @@ namespace offscreenStage
 {
 	namespace pass 
 	{
-		void init();
+		void init(utils::Handle<gfx::BindGroupLayout> material);
 		void render(gfx::CommandBuffer* cmdBuf, Meshes& meshes);
 		void destroy(); 
 	}
@@ -57,7 +57,7 @@ namespace mainStage
 {
 	namespace mainPass 
 	{
-		void init();
+		void init(utils::Handle<gfx::BindGroupLayout> material);
 		void render(gfx::CommandBuffer* cmdBuf, Meshes& meshes);
 		void destroy(); 
 	}
