@@ -348,7 +348,7 @@ void mainStage::surfacePass::render(gfx::CommandBuffer* cmdBuf)
 		.triangleCount = 2
 	});
 
-	cmdBuf->BeginRenderPass(surfaceRenderPass, utils::Span<uint32_t>(encoder.Get().data(), encoder.Get().size()));
+	cmdBuf->BeginSurfacePass(surfaceRenderPass, utils::Span<uint32_t>(encoder.Get().data(), encoder.Get().size()));
 }
 
 void mainStage::surfacePass::destroy()
