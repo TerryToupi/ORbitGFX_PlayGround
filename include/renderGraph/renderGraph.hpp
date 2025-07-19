@@ -62,6 +62,13 @@ namespace mainStage
 		void destroy(); 
 	}
 
+	namespace UIPass 
+	{
+		void init();
+		void render(gfx::CommandBuffer* cmdBuf);
+		void destroy();
+	}
+
 	namespace surfacePass
 	{
 		void init();

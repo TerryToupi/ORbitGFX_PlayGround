@@ -1,5 +1,6 @@
 #include <renderGraph/renderGraph.hpp>
-#include <loaders/meshLoader.hpp>
+#include <loaders/meshLoader.hpp> 
+#include <frameworks/imgui/imguiRenderer.hpp>
 
 #include <iostream>
 #include <window.hpp>
@@ -27,6 +28,11 @@ void mainLoop()
 		cam.processKeyboard(false, false, true, false, 0.005);
 	if (gfx::Window::instance->GetKey(Key::D))
 		cam.processKeyboard(false, false, false, true, 0.005);
+
+	gfx::ImguiRenderer::instance->Begin();
+	bool showDemoWindow = true;
+	ImGui::ShowDemoWindow(&showDemoWindow);
+	gfx::ImguiRenderer::instance->End();
 
     renderGraph::render(meshes, cam);
 }
