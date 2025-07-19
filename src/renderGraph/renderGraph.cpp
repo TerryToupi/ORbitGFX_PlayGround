@@ -29,9 +29,6 @@ utils::Handle<gfx::Shader> surfaceShader;
 utils::Handle<gfx::Buffer> surfaceVertex;
 utils::Handle<gfx::Buffer> surfaceIndex;
 
-//UI PASS
-utils::Handle<gfx::RenderPass> UIRenderPass;
-utils::Handle<gfx::RenderPassLayout> UIRenderLayout;
 
 float surfaceQuad[] = {
   -1.0, -1.0, // bottom-left
@@ -111,8 +108,8 @@ void renderGraph::render(Meshes& meshes, EditorCamera& cam)
 	{
 		gfx::CommandBuffer* command = gfx::Renderer::instance->BeginCommandRecording(gfx::CommandBufferType::MAIN);
 		mainStage::mainPass::render(command, meshes);
-		mainStage::UIPass::render(command);
 		mainStage::surfacePass::render(command);
+		mainStage::UIPass::render(command);
 		command->Submit();
 	}
 }
@@ -371,37 +368,14 @@ void mainStage::surfacePass::destroy()
 
 void mainStage::UIPass::init()
 { 
-	UIRenderLayout = gfx::ResourceManager::instance->Create(gfx::RenderPassLayoutDescriptor{
-		.depth = {
-			.depthTarget = true,
-			.depthTargetFormat = gfx::TextureFormat::D32_FLOAT
-			},
-		.colorTargets = {
-			{.enabled = true, .format = gfx::TextureFormat::RGBA8_UNORM}
-			}
-			});
-	UIRenderPass = gfx::ResourceManager::instance->Create(gfx::RenderPassDescriptor{
-		.depthTarget = {
-			.loadOp = gfx::LoadOperation::LOAD,
-			.storeOp = gfx::StoreOperation::STORE,
-			.stencilLoadOp = gfx::LoadOperation::DONT_CARE,
-			.stencilStoreOp = gfx::StoreOperation::DONT_CARE,
-			.clearZ = 1.0
-		},
-		.colorTargets = {
-			{.loadOp = gfx::LoadOperation::LOAD, .storeOp = gfx::StoreOperation::STORE}
-		},
-		.layout = UIRenderLayout,
-		});
 }
 
 void mainStage::UIPass::render(gfx::CommandBuffer* cmdBuf)
 {
-	cmdBuf->BeginImGuiPass(UIRenderPass, mainFrameBuffer); 
+	cmdBuf->BeginImGuiPass();
 }
 
 void mainStage::UIPass::destroy()
 {
-	gfx::ResourceManager::instance->Remove(UIRenderLayout);
-	gfx::ResourceManager::instance->Remove(UIRenderPass);
+
 }
