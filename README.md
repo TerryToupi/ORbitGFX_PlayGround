@@ -9,4 +9,4 @@ cd external/ORbitGFX
 git submodule update --init
 ```
 
-after that fill free to use CMake to build the project
+after that feel free to use CMake to build the project
