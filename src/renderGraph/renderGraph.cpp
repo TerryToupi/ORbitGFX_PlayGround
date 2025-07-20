@@ -1,7 +1,5 @@
 #include <renderGraph/renderGraph.hpp>
 
-gfx::UniformRingBuffer uniforms;
-
 // GLOBAL DATA
 utils::Handle<gfx::BindGroupLayout> globalsLayout;
 utils::Handle<gfx::BindGroup> globalsGroup;
@@ -43,9 +41,7 @@ uint32_t surfaceQuadIndices[] = {
 
 
 void renderGraph::init(utils::Handle<gfx::BindGroupLayout> material)
-{ 
-	uniforms = gfx::UniformRingBuffer(32 * 1024 * 1024);
-
+{
 	globalsBuffer = gfx::ResourceManager::instance->Create(gfx::BufferDescriptor{
 		.usage = gfx::BufferUsage::UNIFORM,
 		.byteSize = sizeof(Globals),
@@ -121,8 +117,6 @@ void renderGraph::destroy()
 	mainStage::mainPass::destroy();
 	mainStage::UIPass::destroy();
 	mainStage::surfacePass::destroy();
-
-	uniforms.Destroy();
 
 	gfx::ResourceManager::instance->Remove(globalsLayout);
 	gfx::ResourceManager::instance->Remove(globalsBuffer);
@@ -207,7 +201,7 @@ void mainStage::mainPass::init(utils::Handle<gfx::BindGroupLayout> material)
 			{ globalsLayout },
 			{ material },
 			{ mainBindLayout },
-			{ uniforms.GetLayout() }
+			{ gfx::Renderer::instance->RequestUniformRingBuffer()->GetLayout() }
 		},
 		.graphicsState = {
 			.depthTest = gfx::Compare::LESS,
@@ -237,24 +231,26 @@ void mainStage::mainPass::init(utils::Handle<gfx::BindGroupLayout> material)
 void mainStage::mainPass::render(gfx::CommandBuffer* cmdBuf, Meshes& meshes)
 { 
 	gfx::DrawStreamEncoder stream;
+	gfx::UniformRingBuffer* uniforms = gfx::Renderer::instance->RequestUniformRingBuffer();
+
 	for (const auto& mesh : meshes)
 	{
-		auto alloc = uniforms.BumpAllocate<CallData>();
+		auto alloc = uniforms->BumpAllocate<CallData>();
 		alloc.ptr->model = mesh.model;
 		alloc.ptr->inverseModel = mesh.inverseModel;
 
 		stream.Encode({
 			.shader = mainShader,
 			.bindGroups = { globalsGroup, mesh.materialBG, mainBindGroup },
-			.dynamicBuffer = uniforms.GetBuffer(),
+			.dynamicBuffer = uniforms->GetBuffer(),
 			.indexBuffer = mesh.index,
 			.vertexBuffers = { mesh.vertex1, mesh.vertex2 },
-			.dynamicBufferOffset = alloc.offset,
+			.dynamicBufferOffset = {alloc.offset, 0},
 			.triangleCount = mesh.triangles
 			});
 	} 
 
-	uniforms.Upload();
+	uniforms->Upload();
 	cmdBuf->BeginRenderPass(mainRenderPass, mainFrameBuffer, utils::Span<uint32_t>(stream.Get().data(), stream.Get().size()));
 }
 
